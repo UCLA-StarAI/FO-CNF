@@ -39,11 +39,6 @@
 		    float: left;
 	            margin:5px;
 		}
-		table.right {
-		    width: 300px; 
-		    float: right;
-	            margin:5px;
-		}
 	</style>
 
 </head>
@@ -143,7 +138,7 @@ In sum, there are three types of identifiers that can appear as arguments to rel
 
 <h3>Finite Domains</h3>
 
-One can further choose to specify a finite size for the domains. The fact that there are 1000 objects in the domain <tt>people</tt> is expressed as follows.
+One can further choose to specify a finite size for each domain. The fact that there are 1000 objects in the domain <tt>people</tt> is expressed as follows.
 <pre>
 p fo-cnf 2 1
 d people <strong>1000</strong>
@@ -183,7 +178,7 @@ Literal weights can be any number of the form <tt>1</tt>, <tt>-1</tt>, <tt>1.08<
 </p>
 
 <p>
-To capture certain statistical relational models (e.g., <a href="https://lirias.kuleuven.be/bitstream/123456789/460202/1/gribkoff-uai14.pdf">probabilistic databases</a>), one has to associate different weights with different ground atoms of the same relation. This is achieved in FO-CNF as follows.
+To capture certain statistical relational models, one has to associate different weights with different ground atoms of the same relation. This is achieved in FO-CNF as follows.
 <pre>
 p fo-cnf 2 1
 d people 1000 Alice Bob
@@ -228,11 +223,11 @@ Quantified FO-CNF is a generalization of FO-CNF with arbitrary quantification. W
 
 <h3>Format</h3>
 <p>
-To encode that every people has at least one friend, that is, $$\forall x \exists y, \Friends(x,y),$$
+To encode that every person has at least one friend, that is, $$\forall x \exists y, \Friends(x,y),$$
 the Quantified FO-CNF is 
 <pre>
 p <strong>qfo-cnf 2 2</strong>
-d people 1000
+d people ?
 r Friends(people,people)
 r Smokes(people)
 -Smokes(x) -Friends(x,y) Smokes(y)
@@ -249,7 +244,7 @@ We can prepend a space-separated list of quantifiers to any clause, where <tt>!x
 Note that, for the specific task of (weighted) model counting, one can <a href="https://lirias.kuleuven.be/bitstream/123456789/444264/1/vdb-kr14.pdf">convert</a> each Quantified FO-CNF into a standard FO-CNF (using negative weights). For the Quantified FO-CNF above, this yields the following FO-CNF.
 <pre>
 p <strong>fo-cnf 3 2</strong>
-d people 1000
+d people ?
 r Friends(people,people)
 r Smokes(people)
 r R(people)
@@ -266,7 +261,7 @@ To illustrate how FO-CNF can serve as a reduction target for more expressive lan
 <h3>Markov Logic Networks</h3>
 
 <a href="http://homes.cs.washington.edu/~pedrod/papers/aaai06c.pdf">Markov Logic Networks</a> (MLNs) are a statistical relational representation language. 
-Our goal here is the reduce MLNs to FO-CNFs whose <a href="https://lirias.kuleuven.be/bitstream/123456789/308265/1/vdb-ijcai11.pdf">weighted first-order model count</a>  (WFOMC) is equal to the partition function of the MLN.
+Our goal here is to reduce MLNs to FO-CNFs whose <a href="https://lirias.kuleuven.be/bitstream/123456789/308265/1/vdb-ijcai11.pdf">weighted first-order model count</a>  (WFOMC) is equal to the partition function of the MLN.
 The WFOMC is defined as the sum of the weights of all models of the FO-CNF. 
 
 <h4>Quantifier-Free MLNs</h4>
@@ -277,9 +272,11 @@ Smokes(people)
 Friends(people,people)
 -0.5 Friends(x,y)
 0.2 Smokes(x)
-1.2 Smokes(x) ^ Friends(x,y) => Smokes(y)</pre> 
+1.2 Smokes(x) ^ Friends(x,y) => Smokes(y)
+Friends(x,y) => Friends(y,x).
+</pre> 
 We need to reify the last formula to capture its weight, as $$\forall x \forall y, R(x,y) \Leftrightarrow \left[\Smokes(x) \land \Friends(x,y) \Rightarrow \Smokes(y)\right].$$ The resulting FO-CNF is 
-<pre>p fo-cnf 3 4
+<pre>p fo-cnf 3 5
 d people 10 P0 P1 P2 P3 P4 P5 P6 P7 P8 P9
 r Smokes(people)
 r Friends(people,people)
@@ -288,6 +285,7 @@ r R(people,people)
 R(x,y) Smokes(x)
 R(x,y) Friends(x,y)
 R(x,y) -Smokes(y)
+-Friends(x,y) Friends(y,x)
 w Friends 0.607 1
 w Smokes 1.221 1
 w R 3.32 1</pre>
@@ -301,7 +299,8 @@ Smokes(people)
 Friends(people,people)
 -0.5 <strong>Forall y</strong> Friends(x,y)
 0.2 Smokes(x)
-1.2 (<strong>Exist x</strong> Smokes(x) ^ Friends(x,y)) => Smokes(y)</pre> 
+1.2 (<strong>Exist x</strong> Smokes(x) ^ Friends(x,y)) => Smokes(y)
+Friends(x,y) => Friends(y,x).</pre> 
 Now, we also need to reify the first formula as
 $$\begin{align} 
 \forall x, &\, R_1(x) \Leftrightarrow \forall y, \Friends(x,y).
@@ -311,8 +310,8 @@ $$\begin{align}
 \forall y, &\, R_3(y) \Leftrightarrow \left[\exists x, \Body(x,y) \Rightarrow \Smokes(y)\right]\\  
 \forall x, \forall y&\, \Body(x,y) \Leftrightarrow \Smokes(x) \land \Friends(x,y). 
 \end{align}$$ 
-The resulting FO-CNF is
-<pre>p qfo-cnf 4 8
+The resulting Quantified FO-CNF is
+<pre>p qfo-cnf 4 9
 d people 10 P0 P1 P2 P3 P4 P5 P6 P7 P8 P9
 r Smokes(people)
 r Friends(people,people)
@@ -328,6 +327,7 @@ R3(y) -Smokes(y)
 Body(x,y) -Smokes(x) -Friends(x,y)
 -Body(x,y) Smokes(x)
 -Body(x,y) Friends(x,y)
+-Friends(x,y) Friends(y,x)
 w R1 0.607 1
 w Smokes 1.221 1
 w R3 3.32 1</pre>
@@ -385,7 +385,7 @@ Tuple-independent <a href="http://dx.doi.org/10.2200/S00362ED1V01Y201105DTM016">
     <td>0.8</td>
   </tr>
 </table>
-<table class="right external">
+<table class="left external">
 <caption><strong>Friends</strong></caption>
   <tr>
     <th>Friend1</th>
