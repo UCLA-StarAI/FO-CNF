@@ -1,0 +1,486 @@
+<html>
+<head>
+	<title>First-Order CNF Format (FO-CNF)</title>
+
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+	<script type="text/javascript"
+	  src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+	</script>
+
+	<script type="text/x-mathjax-config">
+	MathJax.Hub.Config({
+	  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+	  TeX: {
+	    Macros: {
+	      Smokes: "{\\mathit Smokes}",
+	      Friends:  "{\\mathit Friends}",
+	      Has:  "{\\mathit Has}",
+	      Stress:  "{\\mathit Stress}",
+	      Body:  "{\\mathit Body}"
+	    }
+	  }
+	});
+	</script>
+
+	<style type="text/css">
+		code {
+		    padding: 1px;
+		    color: #333;
+		    background-color: #f5f5f5;
+		    border: 1px solid #ccc;
+		    border-radius: 4px;
+		}
+		.external {
+		    background-color: #fcf8e3;
+		}
+		table.left {
+		    width: 45%; 
+		    float: left;
+	            margin:5px;
+		}
+		table.right {
+		    width: 45%; 
+		    float: right;
+	            margin:5px;
+		}
+	</style>
+
+</head>
+<body class="container">
+
+<h1>A First-Order CNF Format (FO-CNF)</h1>
+
+This document describes a file format called FO-CNF for representing <em>first-order function-free typed</em> conjunctive normal form theories.
+
+<div id="toc">
+<h2>Contents</h2>
+</div>
+
+<div id="contents">
+
+<h2>FO-CNF</h2>
+
+
+<h3>Motivation</h3>
+
+The FO-CNF format is designed with the following goals in mind. It should be
+<ul>
+<li>trivial to parse,</li>
+<li>similar to the widely used <a href="http://www.satcompetition.org/2009/format-benchmarks2009.html">DIMACS format</a> for propositional reasoning,</li>
+<li>equivalent to the function-free subset of the classical <a href="https://en.wikipedia.org/wiki/Conjunctive_normal_form#First-order_logic">first-order CNF</a> used in theorem proving,</li>
+<li>an adequate reduction target for more expressive first-order representations of uncertainty (e.g., parfactor graphs, Markov logic networks, and ProbLog programs), and</li>
+<li>facilitating the development of first-order model counters and knowledge compilers.</li>
+</ul>
+
+
+<h3>Basic Format</h3>
+
+Consider the sentence $$\forall x \forall y, \Smokes(x) \land \Friends(x,y) \Rightarrow \Smokes(y)$$ over a domain of people. In FO-CNF format, this sentence is
+<pre>
+p fo-cnf 2 1
+d people ?
+r Friends(people,people)
+r Smokes(people)
+-Smokes(x) -Friends(x,y) Smokes(y)</pre>
+
+<p>
+The format has four types of lines:
+<ul>
+<li><u>header line</u> <code>p fo-cnf 2 1</code> to indicate that the FO-CNF contains 2 relations and 1 clause.</li>
+<li><u>domain definition line</u> <code>d people ?</code> to define a new domain <tt>people</tt>. The domain size and objects are left unspecified. Domain names can be any alphanumeric string.</li>
+<li><u>relation definition line</u> <code>r Friends(people,people)</code> to define a new relation <tt>Friends</tt> with two arguments, both from the domain <tt>people</tt>. Relation names can be any alphanumeric string starting with an uppercase letter. Two relations cannot have the same name (even if they have different arities or domains).</li>
+<li><u>clause line</u> <code>-Smokes(x) -Friends(x,y) Smokes(y)</code> specifying the clause  $$\forall x \forall y, \neg \Smokes(x) \lor \neg \Friends(x,y) \lor \Smokes(y).$$ A clause line is a space-separated list of literals. Each literal is an atom or its negation (denoted with '-'). Each atom is a relation applied to logical variable arguments (as many as in the relation definition). Logical variables can be any alphanumeric string starting with a lowercase letter. They are implicitly universally quantified.</li> 
+</ul>
+The 4 line types are expected to appear in the specified order: first the header, then the domain definitions, then the relation definitions, and finally the clauses.
+</p>
+
+<p>
+This basic example can be extended with multiple domains, relations, and clauses. The following FO-CNF encodes an additional domain <tt>hobbies</tt>, relation <tt>Has</tt> and sentences $$ \begin{align} 
+\forall x \forall y,&\, \Friends(x,y) \Rightarrow \Friends(y,x) \\ 
+\forall x \forall y,&\, \Friends(x,y) \land \Friends(y,z) \Rightarrow \Friends(x,z) \\ 
+\forall x \forall y \forall z,&\, \Has(x,y) \land  \Friends(y,z) \Rightarrow \Has(z,y) .
+\end{align} $$
+<pre>
+p fo-cnf 3 4
+d people
+<strong>d hobbies</strong>
+r Friends(people,people)
+r Smokes(people)
+<strong>r Has(people,hobbies)</strong>
+-Smokes(x) -Friends(x,y) Smokes(y)
+<strong>-Friends(x,y) Friends(y,x)
+-Friends(x,y) -Friends(y,z) Friends(x,z)
+-Has(x,y) -Friends(x,z) Has(z,y)</strong></pre>
+
+</p>
+
+Next, we extend this basic format with additional (optional) syntax to reach the full FO-CNF specification.
+
+<h3>Domain Constants</h3>
+
+<p>
+One often wants to explicitly refer to distinct objects in the domain (under the <a href="https://en.wikipedia.org/wiki/Unique_name_assumption">unique names assumption</a>). This is achieved by listing a set of constants for each domain, which can then be used explicitly in the clauses.
+<pre>
+p fo-cnf 2 3
+d people ? <strong>Alice Bob Charlie</strong>
+r Friends(people,people)
+r Smokes(people)
+-Smokes(x) -Friends(x,y) Smokes(y)
+<strong>Friends(Alice,Bob)
+-Smokes(Charlie)</strong>
+</pre>
+Here, we assert specific information about 3 people, saying that <tt>Alice</tt> and <tt>Bob</tt> are friends and that <tt>Charlie</tt> does not smoke. No specific information is given about the other people in the domain.
+</p>
+
+<p>
+Constants are given in a space-separated list at the end of the corresponding domain definition. Constants can be any alphanumeric string starting with an uppercase letter or number. One cannot use a constant as an argument when the corresponding domain definition does not list that constant.
+</p>
+
+<p>
+In sum, there are three types of identifiers that can appear as arguments to relations: domain names in domain definition lines, domain constants in clauses, and logical variables in clauses.
+</p>
+
+<h3>Finite Domains</h3>
+
+One can further choose to specify a finite size for the domains. The fact that there are 1000 objects in the domain <tt>people</tt> is expressed as follows.
+<pre>
+p fo-cnf 2 1
+d people <strong>1000</strong>
+r Friends(people,people)
+r Smokes(people)
+-Smokes(x) -Friends(x,y) Smokes(y)</pre>
+Finite domains can be combined with constants as follows.
+<pre>
+p fo-cnf 2 3
+d people <strong>1000 Alice Bob Charlie</strong>
+r Friends(people,people)
+r Smokes(people)
+-Smokes(x) -Friends(x,y) Smokes(y)
+Friends(Alice,Bob)
+-Smokes(Charlie)
+</pre>
+Here, we have specific information about <tt>Alice</tt>, <tt>Bob</tt>, and <tt>Charlie</tt>, but no specific information about the other 997 people in the domain. There can never be more constants in a domain than its specified size. 
+
+
+<h3>Weights</h3>
+
+<p>
+To encode statistical information, FO-CNF supports the association of weights with assignments as follows.
+<pre>
+p fo-cnf 2 1
+d people 1000
+r Friends(people,people)
+r Smokes(people)
+-Smokes(x) -Friends(x,y) Smokes(y)
+<strong>w Friends 3.5 1.2
+w Smokes -0.5 4</strong></pre>
+The <u>weight definition line</u> <code>w Friends 3.5 1.2</code> encodes that the weight of setting any <tt>Friend</tt> atom to <tt>true</tt> is 3.5, and the weight of setting it to <tt>false</tt> is 1.2. The weights of these assignments induce a weight for the models of the FO-CNF, by taking the product of the weights of the assignments in the model. 
+</p>
+
+<p>
+Literal weights can be any number of the form <tt>1</tt>, <tt>-1</tt>, <tt>1.08</tt>, <tt>-1.08</tt>, <tt>1.08e10</tt>, <tt>1.08E10</tt>, <tt>-1e12</tt>, etc. When no weight definition line exists for a relation <tt>R</tt>, its weights are implicitly set to 1, as in <code>w R 1 1</code>.
+</p>
+
+<p>
+To capture certain statistical relational models (e.g., <a href="https://lirias.kuleuven.be/bitstream/123456789/460202/1/gribkoff-uai14.pdf">probabilistic databases</a>), one has to associate different weights with different ground atoms of the same relation. This is achieved in FO-CNF as follows.
+<pre>
+p fo-cnf 2 1
+d people 1000 Alice Bob
+r Friends(people,people)
+r Smokes(people)
+-Smokes(x) -Friends(x,y) Smokes(y)
+w Friends 3.5 1.2
+<strong>w Friends(Alice,Alice) 2 3.4E-2
+w Friends(Alice,Bob) -2.5 0</strong>
+w Smokes -0.5 4</pre>
+Here, we still have the default weights 3.5 and 1.2 for atoms of the <tt>Friends</tt> relations, but this is overridden for the atoms <tt>Friends(Alice,Alice)</tt> and <tt>Friends(Alice,Bob)</tt>. The weights of <tt>Friends(Alice,Alice)</tt> are 2.3 and 3.4E-2. The weights of <tt>Friends(Bob,Alice)</tt> and other <tt>Friends</tt> atoms that have no atom weight definition are still equal to 3.5 and 1.2.
+</p>
+
+<p>
+Weight definition lines are expected to appear after the clause lines.
+Moreover, the weight definition for a relation has to appear before the weight definitions for its atoms, and each atom can appear in at most one weight definition line. If an atom has no weight definition line, it inherits the weights of its relation (which are 1 and 1 when no relation weight definition is given).
+</p>
+
+<h3>Comments</h3>
+
+One can add arbitrary comments by starting the line with a <tt>c</tt> character. These <u>comment lines</u> can appear anywhere in the FO-CNF.
+<pre>
+p fo-cnf 2 1
+<strong>c There are 1000 people in the domain!</strong>
+d people 1000
+r Friends(people,people)
+r Smokes(people)
+-Smokes(x) -Friends(x,y) Smokes(y)</pre>
+
+<h2>Quantified FO-CNF</h2>
+
+<h3>Motivation</h3>
+
+<p>
+The FO-CNF format has the same expressive power as the classical notion of first-order function-free CNF. Unfortunately, there are many theories of interest that have no equivalent first-order function-free CNF representation.
+In particular, theories containing existential quantification cannot be converted into an equivalent CNF, where all variables are universally quantified (and traditional Skolemization techniques are not function-free). This problem extends to first-order representations of uncertainty.
+</p>
+
+<p>
+Quantified FO-CNF is a generalization of FO-CNF with arbitrary quantification. With this additional level of expressive power, there now exists an equisatisfiable Quantified FO-CNF for every function-free first-order logic sentence (and a one-to-one mapping between their models).
+</p>
+
+<h3>Format</h3>
+<p>
+To encode that every people has at least one friend, that is, $$\forall x \exists y, \Friends(x,y),$$
+the Quantified FO-CNF is 
+<pre>
+p <strong>qfo-cnf 2 2</strong>
+d people 1000
+r Friends(people,people)
+r Smokes(people)
+-Smokes(x) -Friends(x,y) Smokes(y)
+<strong>!x ?y Friends(x,y)</strong>
+</pre>
+</p>
+
+<p>
+We can prepend a space-separated list of quantifiers to any clause, where <tt>!x</tt> denotes universal quantification of <tt>x</tt>, and where <tt>?x</tt> denotes existential quantification. Any remaining logical variables that are not quantified explicitly are assumed to be universally quantified in the outer scope.
+</p>
+
+<h3>Conversion to FO-CNF</h3>
+<p>
+Note that, for the specific task of (weighted) model counting, one can <a href="https://lirias.kuleuven.be/bitstream/123456789/444264/1/vdb-kr14.pdf">convert</a> each Quantified FO-CNF into a standard FO-CNF. For the Quantified FO-CNF above, this yields the following FO-CNF.
+<pre>
+p <strong>fo-cnf 3 2</strong>
+d people 1000
+r Friends(people,people)
+r Smokes(people)
+r R(people)
+-Smokes(x) -Friends(x,y) Smokes(y)
+<strong>R(x) -Friends(x,y)
+w R 1 -1</strong>
+</pre>
+</p>
+
+<h2>Example Reductions</h2>
+
+To illustrate how FO-CNF can serve as a reduction target for more expressive languages, we now illustrate the reduction from Markov Logic, ProbLog, and probabilistic databases.
+
+<h3>Markov Logic Networks</h3>
+
+<a href="http://homes.cs.washington.edu/~pedrod/papers/aaai06c.pdf">Markov Logic Networks</a> (MLNs) are a statistical relational representation language. 
+Our goal here is the reduce MLNs to FO-CNFs whose <a href="https://lirias.kuleuven.be/bitstream/123456789/308265/1/vdb-ijcai11.pdf">weighted first-order model count</a>  (WFOMC) is equal to the partition function of the MLN.
+The WFOMC is defined as the sum of the weights of all models of the FO-CNF. 
+
+<h4>Quantifier-Free MLNs</h4>
+
+Quantifier-Free MLNs can easily be <a href="https://lirias.kuleuven.be/bitstream/123456789/308265/1/vdb-ijcai11.pdf">encoded into FO-CNF</a>. Consider the following MLN.
+<pre class="external">people={p0,p1,p2,p3,p4,p5,p6,p7,p8,p9}
+Smokes(people)
+Friends(people,people)
+-0.5 Friends(x,y)
+0.2 Smokes(x)
+1.2 Smokes(x) ^ Friends(x,y) => Smokes(y)</pre> 
+We need to reify the last formula to capture its weight, as $$\forall x \forall y, R(x,y) \Leftrightarrow \left[\Smokes(x) \land \Friends(x,y) \Rightarrow \Smokes(y)\right].$$ The resulting FO-CNF is 
+<pre>p fo-cnf 3 4
+d people 10 P0 P1 P2 P3 P4 P5 P6 P7 P8 P9
+r Smokes(people)
+r Friends(people,people)
+r R(people,people)
+-R(x,y) -Smokes(x) -Friends(x,y) Smokes(y)
+R(x,y) Smokes(x)
+R(x,y) Friends(x,y)
+R(x,y) -Smokes(y)
+w Friends 0.607 1
+w Smokes 1.221 1
+w R 3.32 1</pre>
+The weights are calculated by translating from MLN to FO-CNF weight semantics as $e^{-0.5} = 0.607$, $e^{0.2} =  1.221$, and $e^{1.2} = 3.32$. 
+
+<h4>Quantified MLNs</h4>
+
+The MLN <a href="http://alchemy.cs.washington.edu/user-manual/4_1First_Order_Logic.html">syntax</a> permits the use of existential and universal quantifiers inside weighted formulas. Consider the following MLN.
+<pre class="external">people={p0,p1,p2,p3,p4,p5,p6,p7,p8,p9}
+Smokes(people)
+Friends(people,people)
+-0.5 <strong>Forall y</strong> Friends(x,y)
+0.2 Smokes(x)
+1.2 (<strong>Exist x</strong> Smokes(x) ^ Friends(x,y)) => Smokes(y)</pre> 
+Now, we also need to reify the first formula as
+$$\begin{align} 
+\forall x, &\, R_1(x) \Leftrightarrow \forall y, \Friends(x,y).
+\end{align}$$ 
+The reification of the third formula becomes
+$$\begin{align} 
+\forall y, &\, R_3(y) \Leftrightarrow \left[\exists x, \Body(x,y) \Rightarrow \Smokes(y)\right]\\  
+\forall x, \forall y&\, \Body(x,y) \Leftrightarrow \Smokes(x) \land \Friends(x,y). 
+\end{align}$$ 
+The resulting FO-CNF is
+<pre>p qfo-cnf 4 8
+d people 10 P0 P1 P2 P3 P4 P5 P6 P7 P8 P9
+r Smokes(people)
+r Friends(people,people)
+r R1(people,people)
+r R3(people,people)
+c Encoding of: -0.5 Forall y Friends(x,y)
+!x ?y R1(x) -Friends(x,y)
+-R1(x) Friends(x,y)
+c Encoding of: 1.2 (Exist x Smokes(x) ^ Friends(x,y)) => Smokes(y)
+-R3(y) Smokes(y) -Body(x,y)
+R3(y) -Smokes(y)
+!y ?x R3(y) Body(x,y)
+Body(x,y) -Smokes(x) -Friends(x,y)
+-Body(x,y) Smokes(x)
+-Body(x,y) Friends(x,y)
+w R1 0.607 1
+w Smokes 1.221 1
+w R3 3.32 1</pre>
+
+<h3>Probabilistic Logic Programs</h3>
+
+<a href="https://lirias.kuleuven.be/bitstream/123456789/392821/3/plp2cnf.pdf">ProbLog</a> is a probabilistic programming language. Under certain conditions (tightness), ProbLog programs can be <a href="https://lirias.kuleuven.be/bitstream/123456789/444264/1/vdb-kr14.pdf">encoded into Quantified FO-CNF</a>. Consider for example the following program.
+<pre class="external">0.4 :: stress(alice).
+0.8 :: stress(bob).
+0.2 :: friends(alice, bob).
+0.3 :: friends(bob, charlie).
+smokes(X) :- stress(X).
+smokes(X) :- friends(X,Y), smokes(Y).</pre>
+As a first step, we need to translate the (tight) logic program into first-order logic as 
+$$\begin{align} \forall x, &\, \Smokes(x) \Leftrightarrow \Stress(x) \lor \exists y, \Body(x,y)\\  \forall x, \forall y&\, \Body(x,y) \Leftrightarrow \Friends(x,y) \land \Smokes(y). \end{align}$$ 
+Now we can compute the probability of <tt>Smokes(Charlie)</tt> as the WFOMC of the following FO-CNF.
+<pre>p fo-cnf 4 7
+d people 3 Alice Bob Charlie
+r Stress(people)
+r Smokes(people)
+r Friends(people,people)
+r Body(people,people)
+!x ?y -Smokes(x) Stress(x) Body(x,y)
+Smokes(x) -Stress(x)
+Smokes(x) -Body(x,y)
+Body(x,y) -Friends(x,y) -Stress(y)
+-Body(x,y) Friends(x,y)
+-Body(x,y) Stress(y)
+Smokes(Charlie)
+w Stress 0 1
+w Stress(Alice) 0.4 0.6
+w Stress(Bob) 0.8 0.2
+w Friends 0 1
+w Stress(Alice,Bob) 0.2 0.8
+w Stress(Bob,Charlie) 0.3 0.7</pre>
+Note that we enforce the <a href="https://en.wikipedia.org/wiki/Closed-world_assumption">closed-world assumption</a> of ProbLog by having default weights 0 and 1 for the <tt>Stress</tt> and <tt>Friends</tt> relations. These are only overridden for the probabilistic facts that appear in the program. If any other <tt>Stress</tt> or <tt>Friends</tt> atom is true in a model, that model must have weight 0.
+
+<h3>Probabilistic Databases</h3>
+
+<p>
+Tuple-independent <a href="http://dx.doi.org/10.2200/S00362ED1V01Y201105DTM016">probabilistic databases</a> represent uncertain data that can be queried using the standard database techniques. Probabilistic database query evaluation can easily be <a href="https://lirias.kuleuven.be/bitstream/123456789/460202/1/gribkoff-uai14.pdf">encoded as a WFOMC task</a> on a FO-CNF. Consider for example the following probabilistic database table.
+<table class="left external">
+<caption><strong>Stress</strong></caption>
+  <tr>
+    <th>Person</th>
+    <th>Probability</th>
+  </tr>
+  <tr>
+    <td>Alice</td>	
+    <td>0.4</td>
+  </tr>
+  <tr>
+    <td>Bob</td>	
+    <td>0.8</td>
+  </tr>
+</table>
+<table class="right external">
+<caption><strong>Friends</strong></caption>
+  <tr>
+    <th>Friend1</th>
+    <th>Friend2</th>		
+    <th>Probability</th>
+  </tr>
+  <tr>
+    <td>Alice</td>
+    <td>Bob</td>		
+    <td>0.2</td>
+  </tr>
+  <tr>
+    <td>Bob</td>
+    <td>Charlie</td>		
+    <td>0.3</td>
+  </tr>
+</table>
+</p>
+
+<p>
+Suppose we want to compute the probability of the conjunctive query $\exists x \exists y, \Stress(x) \land \Friends(x,y)$. The negation of this query is encoded into the following FO-CNF.
+<pre>p fo-cnf 2 1
+d people 3 Alice Bob Charlie
+r Stress(people)
+r Friends(people,people)
+-Stress(x) -Friends(x,y)
+w Stress 0 1
+w Stress(Alice) 0.4 0.6
+w Stress(Bob) 0.8 0.2
+w Friends 0 1
+w Friends(Alice,Bob) 0.2 0.8
+w Friends(Bob,Charlie) 0.3 0.7</pre>
+Therefore, the probability of the database query is one minus the WFOMC of the FO-CNF. More complex unions of conjunctive queries can be encoded as FO-CNFs with multiple clauses. We have applied the same trick as for probabilistic logic programs to enforce the <a href="https://en.wikipedia.org/wiki/Closed-world_assumption">closed-world assumption</a>.
+</p>
+
+
+<h2>Backus&ndash;Naur Specification</h2>
+
+<strong>TODO UPDATE!</strong>
+
+<pre>
+# NON-TERMINALS
+
+&lt;fo-cnf&gt;         ::= &lt;header&gt; &lt;domain_list&gt; &lt;relation_list&gt; &lt;clause_list&gt;
+
+&lt;header&gt;         ::= &lt;comment_list&gt; &lt;problem_line&gt; &lt;comment_list&gt;
+&lt;problem_line&gt;   ::= &quot;p fo-cnf&quot; &lt;opt-whitespace&gt; &lt;EOL&gt;
+
+&lt;domain_list&gt;    ::= &lt;empty_string&gt; | &lt;domain_line&gt; &lt;comment_list&gt; &lt;domain_list&gt;
+&lt;domain_line&gt;    ::= &lt;domain_def&gt; &lt;opt-whitespace&gt; &lt;EOL&gt; | &lt;domain_def&gt; &lt;whitespace&gt; &lt;const_list&gt; &lt;opt-whitespace&gt; &lt;EOL&gt;
+&lt;domain_def&gt;     ::= &quot;d&quot; &lt;whitespace&gt; &lt;domain_name&gt; &lt;white-space&gt; &lt;domain_size&gt;
+&lt;const_list&gt;     ::= &lt;const_name&gt; | &lt;const_name&gt; &lt;whitespace&gt; &lt;const_list&gt;
+
+&lt;relation_list&gt;  ::= &lt;empty_string&gt; | &lt;relation_line&gt; &lt;comment_list&gt; &lt;relation_list&gt;
+&lt;relation_line&gt;  ::= &lt;relation_def&gt; &lt;opt-whitespace&gt; &lt;EOL&gt;
+&lt;relation_def&gt;   ::= &quot;r&quot; &lt;whitespace&gt; &lt;relation_name&gt; | &quot;r&quot; &lt;whitespace&gt; &lt;relation_name&gt; &quot;(&quot; &lt;opt-whitespace&gt; &lt;domain_args&gt; &lt;opt-whitespace&gt; &quot;)&quot;
+&lt;domain_args&gt;    ::= &lt;domain_name&gt; | &lt;domain_name&gt; &lt;opt-whitespace&gt; &quot;,&quot; &lt;opt-whitespace&gt; &lt;domain_args&gt;
+
+&lt;clause_list&gt;    ::= &lt;weight_list&gt; | &lt;weight_list&gt; &lt;clause_line&gt; &lt;comment_list&gt; &lt;clause_list&gt;
+&lt;clause_line&gt;    ::= &lt;quant_list&gt; &lt;literal_list&gt; &lt;opt-whitespace&gt; &lt;EOL&gt;
+&lt;quant_list&gt;     ::= &lt;empty_string&gt; | &lt;quant&gt; &lt;variable_name&gt; &lt;whitespace&gt; &lt;quant_list&gt;
+&lt;quant&gt;          ::= &quot;!&quot; | &quot;?&quot;
+&lt;literal_list&gt;   ::= &lt;literal&gt; | &lt;literal&gt; &lt;whitespace&gt; &lt;literal_list&gt;
+&lt;literal&gt;        ::= &lt;atom&gt; | &quot;-&quot; &lt;atom&gt;
+&lt;atom&gt;           ::= &lt;relation_name&gt; | &lt;relation_name&gt; &quot;(&quot; &lt;opt-whitespace&gt; &lt;atom_args&gt; &lt;opt-whitespace&gt; &quot;)&quot;
+&lt;atom_args&gt;      ::= &lt;atom_arg&gt; | &lt;atom_arg&gt; &lt;opt-whitespace&gt; &quot;,&quot; &lt;opt-whitespace&gt; &lt;atom_args&gt;
+&lt;atom_arg&gt;       ::= &lt;const_name&gt; | &lt;variable_name&gt;
+
+&lt;weight_list&gt;    ::= &lt;empty_string&gt; | &lt;weight_line&gt; &lt;comment_list&gt; &lt;weight_list&gt;
+&lt;weight_line&gt;    ::= &lt;weight_def&gt; &lt;opt-whitespace&gt; &lt;EOL&gt;
+&lt;weight_def&gt;     ::= &quot;w&quot; &lt;whitespace&gt; &lt;relation_name&gt; &lt;whitespace&gt; &lt;weights&gt; | &quot;w&quot; &lt;whitespace&gt; &lt;relation_name&gt; &quot;(&quot; &lt;opt-whitespace&gt; &lt;const_args&gt; &lt;opt-whitespace&gt; &quot;)&quot; &lt;whitespace&gt; &lt;weights&gt;
+&lt;const_args&gt;     ::= &lt;const_name&gt; | &lt;const_name&gt; &lt;opt-whitespace&gt; &quot;,&quot; &lt;opt-whitespace&gt; &lt;const_args&gt;
+&lt;weights&gt;        ::= &lt;weight&gt; &lt;whitespace&gt; &lt;weight&gt;
+
+&lt;comment_list&gt;   ::= &lt;empty_string&gt; | &lt;comment_line&gt; &lt;comment_list&gt;
+&lt;comment_line&gt;   ::= &quot;c&quot; &lt;text&gt; &lt;EOL&gt;
+
+&lt;opt-whitespace&gt; ::= &lt;empty_string&gt; |&lt;whitespace&gt;
+&lt;whitespace&gt;     ::= &quot; &quot; | &quot; &quot; &lt;whitespace&gt;
+
+# TERMINALS
+
+&lt;weight&gt;         ::= {A floating point number}
+&lt;domain_size&gt;    ::= {A positive integer}
+&lt;domain_name&gt;    ::= {An alphanumeric string}
+&lt;relation_name&gt;  ::= {An alphanumeric string starting with an uppercase letter}
+&lt;const_name&gt;     ::= {An alphanumeric string starting with an uppercase letter or a number}
+&lt;variable_name&gt;  ::= {An alphanumeric string starting with a  lowercase letter}
+&lt;empty_string&gt;   ::= &quot;&quot;
+&lt;text&gt;           ::= {A sequence of non-special ASCII characters}
+&lt;EOL&gt;            ::= {The end-of-line specifier}
+</pre>
+
+</div>
+
+<script src="toc.js"></script>
+
+</body>
+</html>
