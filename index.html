@@ -89,7 +89,7 @@ The format has four types of lines:
 <ul>
 <li><u>header line</u> <code>p fo-cnf 2 1</code> to indicate that the FO-CNF contains 2 relations and 1 clause.</li>
 <li><u>domain definition line</u> <code>d people ?</code> to define a new domain <tt>people</tt>. The domain size and objects are left unspecified. Domain names can be any alphanumeric string.</li>
-<li><u>relation definition line</u> <code>r Friends(people,people)</code> to define a new relation <tt>Friends</tt> with two arguments, both from the domain <tt>people</tt>. Relation names can be any alphanumeric string starting with an uppercase letter. Two relations cannot have the same name (even if they have different arities or domains).</li>
+<li><u>relation definition line</u> <code>r Friends(people,people)</code> to define a new relation <tt>Friends</tt> with two arguments, both from the domain <tt>people</tt>. Relation names can be any alphanumeric string starting with an uppercase letter. Two relations cannot have the same name (even if they have different arities or domains). Relations with no arguments are written without parentheses (e.g. <code>r AdamLikesEve</code>).</li>
 <li><u>clause line</u> <code>-Smokes(x) -Friends(x,y) Smokes(y)</code> specifying the clause  $$\forall x \forall y, \neg \Smokes(x) \lor \neg \Friends(x,y) \lor \Smokes(y).$$ A clause line is a space-separated list of literals. Each literal is an atom or its negation (denoted with '-'). Each atom is a relation applied to logical variable arguments (as many as in the relation definition). Logical variables can be any alphanumeric string starting with a lowercase letter. They are implicitly universally quantified.</li> 
 </ul>
 The 4 line types are expected to appear in the specified order: first the header, then the domain definitions, then the relation definitions, and finally the clauses.
@@ -138,7 +138,7 @@ Constants are given in a space-separated list at the end of the corresponding do
 </p>
 
 <p>
-In sum, there are three types of identifiers that can appear as arguments to relations: domain names in domain definition lines, domain constants in clauses, and logical variables in clauses.
+In sum, there are three types of identifiers that can appear as arguments to relations: domain names in relation definition lines, domain constants in clauses, and logical variables in clauses.
 </p>
 
 <h3>Finite Domains</h3>
