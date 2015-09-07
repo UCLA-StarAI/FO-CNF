@@ -35,12 +35,12 @@
 		    background-color: #fcf8e3;
 		}
 		table.left {
-		    width: 45%; 
+		    width: 300px; 
 		    float: left;
 	            margin:5px;
 		}
 		table.right {
-		    width: 45%; 
+		    width: 300px; 
 		    float: right;
 	            margin:5px;
 		}
@@ -334,14 +334,14 @@ w R3 3.32 1</pre>
 
 <h3>Probabilistic Logic Programs</h3>
 
-<a href="https://lirias.kuleuven.be/bitstream/123456789/392821/3/plp2cnf.pdf">ProbLog</a> is a probabilistic programming language. Under certain conditions (tightness), ProbLog programs can be <a href="https://lirias.kuleuven.be/bitstream/123456789/444264/1/vdb-kr14.pdf">encoded into Quantified FO-CNF</a>. Consider for example the following program.
+<a href="https://lirias.kuleuven.be/bitstream/123456789/392821/3/plp2cnf.pdf">ProbLog</a> is a probabilistic programming language. Under certain conditions (tightness), ProbLog programs can be <a href="https://lirias.kuleuven.be/bitstream/123456789/444264/1/vdb-kr14.pdf">encoded into Quantified FO-CNFs</a>. Consider the following program.
 <pre class="external">0.4 :: stress(alice).
 0.8 :: stress(bob).
 0.2 :: friends(alice, bob).
 0.3 :: friends(bob, charlie).
 smokes(X) :- stress(X).
 smokes(X) :- friends(X,Y), smokes(Y).</pre>
-As a first step, we need to translate the (tight) logic program into first-order logic as 
+As a first step, we need to translate the logic program into first-order logic as 
 $$\begin{align} \forall x, &\, \Smokes(x) \Leftrightarrow \Stress(x) \lor \exists y, \Body(x,y)\\  \forall x, \forall y&\, \Body(x,y) \Leftrightarrow \Friends(x,y) \land \Smokes(y). \end{align}$$ 
 Now we can compute the probability of <tt>Smokes(Charlie)</tt> as the WFOMC of the following FO-CNF.
 <pre>p fo-cnf 4 7
@@ -368,7 +368,8 @@ Note that we enforce the <a href="https://en.wikipedia.org/wiki/Closed-world_ass
 <h3>Probabilistic Databases</h3>
 
 <p>
-Tuple-independent <a href="http://dx.doi.org/10.2200/S00362ED1V01Y201105DTM016">probabilistic databases</a> represent uncertain data that can be queried using the standard database techniques. Probabilistic database query evaluation can easily be <a href="https://lirias.kuleuven.be/bitstream/123456789/460202/1/gribkoff-uai14.pdf">encoded as a WFOMC task</a> on a FO-CNF. Consider for example the following probabilistic database table.
+Tuple-independent <a href="http://dx.doi.org/10.2200/S00362ED1V01Y201105DTM016">probabilistic databases</a> represent uncertain data that can be queried using the standard database techniques. Probabilistic database query evaluation can easily be <a href="https://lirias.kuleuven.be/bitstream/123456789/460202/1/gribkoff-uai14.pdf">encoded as a WFOMC task</a> on an FO-CNF. Consider the following probabilistic database tables.
+<div>
 <table class="left external">
 <caption><strong>Stress</strong></caption>
   <tr>
@@ -402,6 +403,9 @@ Tuple-independent <a href="http://dx.doi.org/10.2200/S00362ED1V01Y201105DTM016">
     <td>0.3</td>
   </tr>
 </table>
+</div>
+<div style="clear: both;"></div>
+
 </p>
 
 <p>
@@ -417,7 +421,7 @@ w Stress(Bob) 0.8 0.2
 w Friends 0 1
 w Friends(Alice,Bob) 0.2 0.8
 w Friends(Bob,Charlie) 0.3 0.7</pre>
-Therefore, the probability of the database query is one minus the WFOMC of the FO-CNF. More complex unions of conjunctive queries can be encoded as FO-CNFs with multiple clauses. We have applied the same trick as for probabilistic logic programs to enforce the <a href="https://en.wikipedia.org/wiki/Closed-world_assumption">closed-world assumption</a>.
+The probability of the database query is one minus the WFOMC of the FO-CNF. More complex unions of conjunctive queries can be encoded as FO-CNFs with multiple clauses. We have applied the same trick as for probabilistic logic programs to enforce the <a href="https://en.wikipedia.org/wiki/Closed-world_assumption">closed-world assumption</a>.
 </p>
 
 
