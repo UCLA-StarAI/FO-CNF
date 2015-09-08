@@ -101,8 +101,8 @@ This basic example can be extended with multiple domains, relations, and clauses
 \end{align} $$
 <pre>
 p fo-cnf 3 4
-d people
-<strong>d hobbies</strong>
+d people ?
+<strong>d hobbies ?</strong>
 r Friends(people,people)
 r Smokes(people)
 <strong>r Has(people,hobbies)</strong>
@@ -218,10 +218,7 @@ r Smokes(people)
 <p>
 The FO-CNF format has the same expressive power as the classical notion of first-order function-free CNF. Unfortunately, there are many theories of interest that have no equivalent first-order function-free CNF representation.
 In particular, theories containing existential quantification cannot be converted into an equivalent CNF, where all variables are universally quantified (and traditional Skolemization techniques are not function-free). This problem extends to first-order representations of uncertainty.
-</p>
-
-<p>
-Quantified FO-CNF is a generalization of FO-CNF with arbitrary quantification. With this additional level of expressive power, there now exists an equisatisfiable Quantified FO-CNF for every function-free first-order logic sentence (and a one-to-one mapping between their models).
+Quantified FO-CNF is a generalization of FO-CNF with arbitrary quantification, which makes it strictly more expressive.
 </p>
 
 <h3>Format</h3>
@@ -242,9 +239,24 @@ r Smokes(people)
 We can prepend a space-separated list of quantifiers to any clause, where <tt>!x</tt> denotes universal quantification of <tt>x</tt>, and where <tt>?x</tt> denotes existential quantification. Any remaining logical variables that are not quantified explicitly are assumed to be universally quantified in the outer scope.
 </p>
 
-<h3>Conversion to FO-CNF</h3>
+<h2>FO Conversions</h2>
+
+<h3>From FO to Quantified FO-CNF</h3>
+
+Any function-free first-order sentence can be converted in polytime into an <em>equisatisfiable</em> Quantified FO-CNF while guaranteeing a one-to-one mapping between their models (and thus preservation of model counts). This ability stems from the additional expressive power of Quantified FO-CNF. The conversion proceeds as follows:
+
+<ol>
+<li>Convert from an arbitrary first-order sentence into <a href="https://en.wikipedia.org/wiki/Prenex_normal_form">prenex normal form</a>.</li>
+<li>Replace each quantifier-free sentence $\phi(\mathbf{x})$ by a new relation symbol $R(\mathbf{x})$. Now every quantified sentence is in Quantified FO-CNF format.</li>
+<li>Add equivalences $\forall \mathbf{x}, R(\mathbf{x}) \Leftrightarrow \phi(\mathbf{x})$. These equivalences are in <a href="https://en.wikipedia.org/wiki/Skolem_normal_form">Skolem normal form</a>.</li>
+<li>Convert the equivalences into FO-CNF in the <a href="https://en.wikipedia.org/wiki/Conjunctive_normal_form">standard way</a>, by eliminating implications and equivalences, going to <a href="https://en.wikipedia.org/wiki/Negation_normal_form">negation normal form</a>, standardizing variables, dropping quantifiers, and distributing disjunctions over conjunctions..</li>
+</ol>
+
+
+<h3>From Quantified FO-CNF to FO-CNF</h3>
 <p>
-Note that, for the specific task of (weighted) model counting, one can <a href="https://lirias.kuleuven.be/bitstream/123456789/444264/1/vdb-kr14.pdf">convert</a> each Quantified FO-CNF into a standard FO-CNF (using negative weights). For the Quantified FO-CNF above, this yields the following FO-CNF.
+Any Quantified FO-CNF can be <a href="https://lirias.kuleuven.be/bitstream/123456789/444264/1/vdb-kr14.pdf">converted</a> in polytime into a <em>model-count preserving</em> FO-CNF, assuming we use negative weights.
+For the Quantified FO-CNF above, this yields the following FO-CNF.
 <pre>
 p <strong>fo-cnf 3 2</strong>
 d people ?
@@ -255,6 +267,7 @@ r R(people)
 <strong>R(x) -Friends(x,y)
 w R 1 -1</strong>
 </pre>
+For stronger notions of equivalence, such as equisatisfiability, a conversion from Quantified FO-CNF to FO-CNF is not possible.
 </p>
 
 <h2>Example Reductions</h2>
@@ -278,7 +291,7 @@ Friends(people,people)
 1.2 Smokes(x) ^ Friends(x,y) => Smokes(y)
 Friends(x,y) => Friends(y,x).
 </pre> 
-We need to reify the last formula to capture its weight, as $$\forall x \forall y, R(x,y) \Leftrightarrow \left[\Smokes(x) \land \Friends(x,y) \Rightarrow \Smokes(y)\right].$$ The resulting FO-CNF is 
+We need to reify the third formula to capture its weight, as $$\forall x \forall y, R(x,y) \Leftrightarrow \left[\Smokes(x) \land \Friends(x,y) \Rightarrow \Smokes(y)\right].$$ The resulting FO-CNF is 
 <pre>p fo-cnf 3 5
 d people 10 P0 P1 P2 P3 P4 P5 P6 P7 P8 P9
 r Smokes(people)
@@ -311,7 +324,7 @@ $$\begin{align}
 The reification of the third formula becomes
 $$\begin{align} 
 \forall y, &\, R_3(y) \Leftrightarrow \left[\exists x, \Body(x,y) \Rightarrow \Smokes(y)\right]\\  
-\forall x, \forall y&\, \Body(x,y) \Leftrightarrow \Smokes(x) \land \Friends(x,y). 
+\forall x, \forall y&\, \Body(x,y) \Leftrightarrow \Smokes(x) \land \Friends(xf,y). 
 \end{align}$$ 
 The resulting Quantified FO-CNF is
 <pre>p qfo-cnf 4 9
