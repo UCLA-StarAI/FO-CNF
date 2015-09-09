@@ -480,7 +480,7 @@ The probability of the database query is one minus the WFOMC of the FO-CNF. More
 # a (possibly empty) list of weight definitions with optional comments
 &lt;weight_list&gt;     ::= &lt;empty_string&gt; | &lt;opt-comment&gt; &lt;weight_line&gt; &lt;weight_list&gt;
 &lt;weight_line&gt;     ::= "w" &lt;whitespace&gt; &lt;relation_name&gt; &lt;const_args&gt; &lt;whitespace&gt; &lt;weights&gt; &lt;opt-whitespace&gt; &lt;EOL&gt; 
-&lt;const_args&gt;      ::= "(" &lt;opt-whitespace&gt; &lt;const_arg_list&gt; &lt;opt-whitespace&gt; ")"
+&lt;const_args&gt;      ::= &lt;empty_string&gt; | "(" &lt;opt-whitespace&gt; &lt;const_arg_list&gt; &lt;opt-whitespace&gt; ")"
 &lt;const_arg_list&gt;  ::= &lt;const_name&gt; | &lt;const_name&gt; &lt;opt-whitespace&gt; "," &lt;opt-whitespace&gt; &lt;const_arg_list&gt;
 &lt;weights&gt;         ::= &lt;weight&gt; &lt;whitespace&gt; &lt;weight&gt;
 
