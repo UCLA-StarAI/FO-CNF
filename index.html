@@ -97,7 +97,7 @@ The 4 line types are expected to appear in the specified order: first the header
 This basic example can be extended with multiple domains, relations, and clauses. The following FO-CNF encodes an additional domain <tt>hobbies</tt>, relation <tt>Has</tt> and sentences $$ \begin{align} 
 \forall x \forall y,&\, \Friends(x,y) \Rightarrow \Friends(y,x) \\ 
 \forall x \forall y,&\, \Friends(x,y) \land \Friends(y,z) \Rightarrow \Friends(x,z) \\ 
-\forall x \forall y \forall z,&\, \Has(x,y) \land  \Friends(y,z) \Rightarrow \Has(z,y) .
+\forall x \forall y \forall z,&\, \Has(x,y) \land  \Friends(x,z) \Rightarrow \Has(z,y) .
 \end{align} $$
 <pre>
 p fo-cnf 3 4
@@ -249,7 +249,7 @@ Any function-free first-order sentence can be converted in polytime into an <em>
 <li>Convert from an arbitrary first-order sentence into <a href="https://en.wikipedia.org/wiki/Prenex_normal_form">prenex normal form</a>.</li>
 <li>Replace each quantifier-free sentence $\phi(\mathbf{x})$ by a new relation symbol $R(\mathbf{x})$. Now every quantified sentence is in Quantified FO-CNF format.</li>
 <li>Add equivalences $\forall \mathbf{x}, R(\mathbf{x}) \Leftrightarrow \phi(\mathbf{x})$. These equivalences are in <a href="https://en.wikipedia.org/wiki/Skolem_normal_form">Skolem normal form</a>.</li>
-<li>Convert the equivalences into FO-CNF in the <a href="https://en.wikipedia.org/wiki/Conjunctive_normal_form">standard way</a>, by eliminating implications and equivalences, going to <a href="https://en.wikipedia.org/wiki/Negation_normal_form">negation normal form</a>, standardizing variables, dropping quantifiers, and distributing disjunctions over conjunctions..</li>
+<li>Convert the equivalences into FO-CNF in the <a href="https://en.wikipedia.org/wiki/Conjunctive_normal_form">standard way</a>, by eliminating implications and equivalences, going to <a href="https://en.wikipedia.org/wiki/Negation_normal_form">negation normal form</a>, standardizing variables, dropping quantifiers, and distributing disjunctions over conjunctions.</li>
 </ol>
 
 
@@ -305,7 +305,7 @@ R(x,y) -Smokes(y)
 w Friends 0.607 1
 w Smokes 1.221 1
 w R 3.32 1</pre>
-The weights are calculated by translating from MLN to FO-CNF weight semantics as $e^{-0.5} = 0.607$, $e^{0.2} =  1.221$, and $e^{1.2} = 3.32$. 
+The weights are calculated by translating from MLN to FO-CNF weight semantics as $e^{-0.5} = 0.607$, $e^{0.2} =  1.221$, and $e^{1.2} = 3.32$. Note that constants are required to be uppercase in FO-CNF whereas they are lowercase in MLN syntax.
 
 <h4>Quantified MLNs</h4>
 
@@ -324,13 +324,14 @@ $$\begin{align}
 The reification of the third formula becomes
 $$\begin{align} 
 \forall y, &\, R_3(y) \Leftrightarrow \left[\exists x, \Body(x,y) \Rightarrow \Smokes(y)\right]\\  
-\forall x, \forall y&\, \Body(x,y) \Leftrightarrow \Smokes(x) \land \Friends(xf,y). 
+\forall x, \forall y&\, \Body(x,y) \Leftrightarrow \Smokes(x) \land \Friends(x,y). 
 \end{align}$$ 
 The resulting Quantified FO-CNF is
-<pre>p qfo-cnf 4 9
+<pre>p qfo-cnf 5 9
 d people 10 P0 P1 P2 P3 P4 P5 P6 P7 P8 P9
 r Smokes(people)
 r Friends(people,people)
+r Body(people,people)
 r R1(people,people)
 r R3(people,people)
 c Encoding of: -0.5 Forall y Friends(x,y)
@@ -445,56 +446,65 @@ The probability of the database query is one minus the WFOMC of the FO-CNF. More
 <strong>TODO UPDATE!</strong>
 
 <pre class="bnf">
-# NON-TERMINALS
+# FO-CNF BNF Specification
+&lt;fo-cnf&gt;          ::= &lt;opt-comment&gt; &lt;header&gt; &lt;domain_list&gt; &lt;relation_list&gt; &lt;clause_list&gt; &lt;weight_list&gt; &lt;opt-comment&gt;
 
-&lt;fo-cnf&gt;         ::= &lt;header&gt; &lt;domain_list&gt; &lt;relation_list&gt; &lt;clause_list&gt;
+# header line
+&lt;header&gt;          ::= &lt;fo-cnf_type&gt; &lt;whitespace&gt; &lt;num_relation&gt; &lt;whitespace&gt; &lt;num_clause&gt; &lt;EOL&gt;
+&lt;fo-cnf_type&gt;     ::= "p fo-cnf" | "p qfo-cnf"
 
-&lt;header&gt;         ::= &lt;comment_list&gt; &lt;problem_line&gt; &lt;comment_list&gt;
-&lt;problem_line&gt;   ::= &quot;p fo-cnf&quot; &lt;opt-whitespace&gt; &lt;EOL&gt;
+# a (possibly empty) list of domain definitions with optional comments
+&lt;domain_list&gt;     ::= &lt;empty_string&gt; | &lt;opt-comment&gt; &lt;domain_line&gt; &lt;domain_list&gt;
+&lt;domain_line&gt;     ::= "d" &lt;whitespace&gt; &lt;domain_name&gt; &lt;white-space&gt; &lt;domain_type&gt; &lt;const_list&gt; &lt;opt-whitespace&gt; &lt;EOL&gt;
+&lt;domain_type&gt;     ::= "?" | &lt;domain_size&gt;
+&lt;const_list&gt;      ::= &lt;empty_string&gt; | &lt;whitespace&gt; &lt;const_name&gt; &lt;const_list&gt;
 
-&lt;domain_list&gt;    ::= &lt;empty_string&gt; | &lt;domain_line&gt; &lt;comment_list&gt; &lt;domain_list&gt;
-&lt;domain_line&gt;    ::= &lt;domain_def&gt; &lt;opt-whitespace&gt; &lt;EOL&gt; | &lt;domain_def&gt; &lt;whitespace&gt; &lt;const_list&gt; &lt;opt-whitespace&gt; &lt;EOL&gt;
-&lt;domain_def&gt;     ::= &quot;d&quot; &lt;whitespace&gt; &lt;domain_name&gt; &lt;white-space&gt; &lt;domain_size&gt;
-&lt;const_list&gt;     ::= &lt;const_name&gt; | &lt;const_name&gt; &lt;whitespace&gt; &lt;const_list&gt;
+# a (possibly empty) list of relation definitions with optional comments
+&lt;relation_list&gt;   ::= &lt;empty_string&gt; | &lt;opt-comment&gt; &lt;relation_line&gt; &lt;relation_list&gt;
+&lt;relation_line&gt;   ::= "r" &lt;whitespace&gt; &lt;relation_name&gt; &lt;domain_args&gt; &lt;opt-whitespace&gt; &lt;EOL&gt;
+&lt;domain_args&gt;     ::= &lt;empty_string&gt; | "(" &lt;opt-whitespace&gt; &lt;domain_arg_list&gt; &lt;opt-whitespace&gt; ")"
+&lt;domain_arg_list&gt; ::= &lt;domain_name&gt; | &lt;domain_name&gt; &lt;opt-whitespace&gt; "," &lt;opt-whitespace&gt; &lt;domain_arg_list&gt;
 
-&lt;relation_list&gt;  ::= &lt;empty_string&gt; | &lt;relation_line&gt; &lt;comment_list&gt; &lt;relation_list&gt;
-&lt;relation_line&gt;  ::= &lt;relation_def&gt; &lt;opt-whitespace&gt; &lt;EOL&gt;
-&lt;relation_def&gt;   ::= &quot;r&quot; &lt;whitespace&gt; &lt;relation_name&gt; | &quot;r&quot; &lt;whitespace&gt; &lt;relation_name&gt; &quot;(&quot; &lt;opt-whitespace&gt; &lt;domain_args&gt; &lt;opt-whitespace&gt; &quot;)&quot;
-&lt;domain_args&gt;    ::= &lt;domain_name&gt; | &lt;domain_name&gt; &lt;opt-whitespace&gt; &quot;,&quot; &lt;opt-whitespace&gt; &lt;domain_args&gt;
+# a (possibly empty) list of clause definitions with optional comments
+&lt;clause_list&gt;     ::= &lt;empty_string&gt; | &lt;opt-comment&gt; &lt;clause_line&gt; &lt;clause_list&gt;
+&lt;clause_line&gt;     ::= &lt;quant_list&gt; &lt;literal_list&gt; &lt;opt-whitespace&gt; &lt;EOL&gt;
+&lt;quant_list&gt;      ::= &lt;empty_string&gt; | &lt;quant&gt; &lt;variable_name&gt; &lt;whitespace&gt; &lt;quant_list&gt;
+&lt;quant&gt;           ::= "!" | "?"
+&lt;literal_list&gt;    ::= &lt;literal&gt; | &lt;literal&gt; &lt;whitespace&gt; &lt;literal_list&gt;
+&lt;literal&gt;         ::= &lt;atom&gt; | "-" &lt;atom&gt;
+&lt;atom&gt;            ::= &lt;relation_name&gt; &lt;atom_args&gt; 
+&lt;atom_args&gt;       ::= &lt;empty_string&gt; | "(" &lt;opt-whitespace&gt; &lt;atom_arg_list&gt; &lt;opt-whitespace&gt; ")"
+&lt;atom_arg_list&gt;   ::= &lt;atom_arg&gt; | &lt;atom_arg&gt; &lt;opt-whitespace&gt; "," &lt;opt-whitespace&gt; &lt;atom_arg_list&gt;
+&lt;atom_arg&gt;        ::= &lt;const_name&gt; | &lt;variable_name&gt;
 
-&lt;clause_list&gt;    ::= &lt;weight_list&gt; | &lt;weight_list&gt; &lt;clause_line&gt; &lt;comment_list&gt; &lt;clause_list&gt;
-&lt;clause_line&gt;    ::= &lt;quant_list&gt; &lt;literal_list&gt; &lt;opt-whitespace&gt; &lt;EOL&gt;
-&lt;quant_list&gt;     ::= &lt;empty_string&gt; | &lt;quant&gt; &lt;variable_name&gt; &lt;whitespace&gt; &lt;quant_list&gt;
-&lt;quant&gt;          ::= &quot;!&quot; | &quot;?&quot;
-&lt;literal_list&gt;   ::= &lt;literal&gt; | &lt;literal&gt; &lt;whitespace&gt; &lt;literal_list&gt;
-&lt;literal&gt;        ::= &lt;atom&gt; | &quot;-&quot; &lt;atom&gt;
-&lt;atom&gt;           ::= &lt;relation_name&gt; | &lt;relation_name&gt; &quot;(&quot; &lt;opt-whitespace&gt; &lt;atom_args&gt; &lt;opt-whitespace&gt; &quot;)&quot;
-&lt;atom_args&gt;      ::= &lt;atom_arg&gt; | &lt;atom_arg&gt; &lt;opt-whitespace&gt; &quot;,&quot; &lt;opt-whitespace&gt; &lt;atom_args&gt;
-&lt;atom_arg&gt;       ::= &lt;const_name&gt; | &lt;variable_name&gt;
+# a (possibly empty) list of weight definitions with optional comments
+&lt;weight_list&gt;     ::= &lt;empty_string&gt; | &lt;opt-comment&gt; &lt;weight_line&gt; &lt;weight_list&gt;
+&lt;weight_line&gt;     ::= "w" &lt;whitespace&gt; &lt;relation_name&gt; &lt;const_args&gt; &lt;whitespace&gt; &lt;weights&gt; &lt;opt-whitespace&gt; &lt;EOL&gt; 
+&lt;const_args&gt;      ::= "(" &lt;opt-whitespace&gt; &lt;const_arg_list&gt; &lt;opt-whitespace&gt; ")"
+&lt;const_arg_list&gt;  ::= &lt;const_name&gt; | &lt;const_name&gt; &lt;opt-whitespace&gt; "," &lt;opt-whitespace&gt; &lt;const_arg_list&gt;
+&lt;weights&gt;         ::= &lt;weight&gt; &lt;whitespace&gt; &lt;weight&gt;
 
-&lt;weight_list&gt;    ::= &lt;empty_string&gt; | &lt;weight_line&gt; &lt;comment_list&gt; &lt;weight_list&gt;
-&lt;weight_line&gt;    ::= &lt;weight_def&gt; &lt;opt-whitespace&gt; &lt;EOL&gt;
-&lt;weight_def&gt;     ::= &quot;w&quot; &lt;whitespace&gt; &lt;relation_name&gt; &lt;whitespace&gt; &lt;weights&gt; | &quot;w&quot; &lt;whitespace&gt; &lt;relation_name&gt; &quot;(&quot; &lt;opt-whitespace&gt; &lt;const_args&gt; &lt;opt-whitespace&gt; &quot;)&quot; &lt;whitespace&gt; &lt;weights&gt;
-&lt;const_args&gt;     ::= &lt;const_name&gt; | &lt;const_name&gt; &lt;opt-whitespace&gt; &quot;,&quot; &lt;opt-whitespace&gt; &lt;const_args&gt;
-&lt;weights&gt;        ::= &lt;weight&gt; &lt;whitespace&gt; &lt;weight&gt;
+# a (possibly empty) list of comments
+&lt;opt-comment&gt;     ::= &lt;empty_string&gt; | &lt;comment_line&gt; &lt;opt-comment&gt;
+&lt;comment_line&gt;    ::= "c" &lt;text&gt; &lt;EOL&gt;
 
-&lt;comment_list&gt;   ::= &lt;empty_string&gt; | &lt;comment_line&gt; &lt;comment_list&gt;
-&lt;comment_line&gt;   ::= &quot;c&quot; &lt;text&gt; &lt;EOL&gt;
+# a (possibly empty) sequence of whitespace
+&lt;opt-whitespace&gt;  ::= &lt;empty_string&gt; |&lt;whitespace&gt;
+&lt;whitespace&gt;      ::= " " | " " &lt;whitespace&gt;
 
-&lt;opt-whitespace&gt; ::= &lt;empty_string&gt; |&lt;whitespace&gt;
-&lt;whitespace&gt;     ::= &quot; &quot; | &quot; &quot; &lt;whitespace&gt;
+# common terminal symbols
 
-# TERMINALS
-
-&lt;weight&gt;         ::= {A floating point number}
-&lt;domain_size&gt;    ::= {A positive integer}
-&lt;domain_name&gt;    ::= {An alphanumeric string}
-&lt;relation_name&gt;  ::= {An alphanumeric string starting with an uppercase letter}
-&lt;const_name&gt;     ::= {An alphanumeric string starting with an uppercase letter or a number}
-&lt;variable_name&gt;  ::= {An alphanumeric string starting with a  lowercase letter}
-&lt;empty_string&gt;   ::= &quot;&quot;
-&lt;text&gt;           ::= {A sequence of non-special ASCII characters}
-&lt;EOL&gt;            ::= {The end-of-line specifier}
+&lt;num_relation&gt;    ::= {A non-negative integer}
+&lt;num_clause&gt;      ::= {A non-negative integer}
+&lt;weight&gt;          ::= {A floating point number}
+&lt;domain_size&gt;     ::= {A positive integer}
+&lt;domain_name&gt;     ::= {An alphanumeric string}
+&lt;relation_name&gt;   ::= {An alphanumeric string starting with an uppercase letter}
+&lt;const_name&gt;      ::= {An alphanumeric string starting with an uppercase letter or a number}
+&lt;variable_name&gt;   ::= {An alphanumeric string starting with a  lowercase letter}
+&lt;empty_string&gt;    ::= ""
+&lt;text&gt;            ::= {A sequence of non-special ASCII characters}
+&lt;EOL&gt;             ::= {The end-of-line specifier}
 </pre>
 
 </div>
