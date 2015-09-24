@@ -42,6 +42,12 @@
 		    float: left;
 	            margin:5px;
 		}
+		.dl-horizontal dt {
+                    width: 30px; 
+		}
+		.dl-horizontal dd {
+		    margin-left: 40px; 
+		}
 	</style>
 
 </head>
@@ -49,7 +55,7 @@
 
 <h1>A First-Order CNF Format (FO-CNF)</h1>
 
-This document describes a file format called FO-CNF for representing <em>first-order function-free typed</em> conjunctive normal form theories.
+This document describes a file format called FO-CNF for representing <em>function-free first-order typed</em> conjunctive normal form theories.
 
 <div id="toc">
 <h2>Contents</h2>
@@ -216,7 +222,7 @@ r Smokes(people)
 <h3>Motivation</h3>
 
 <p>
-The FO-CNF format has the same expressive power as the classical notion of first-order function-free CNF. Unfortunately, there are many theories of interest that have no equivalent first-order function-free CNF representation.
+The FO-CNF format has the same expressive power as the classical notion of function-free first-order CNF. Unfortunately, there are many theories of interest that have no equivalent function-free first-order CNF representation.
 In particular, theories containing existential quantification cannot be converted into an equivalent CNF, where all variables are universally quantified (and traditional Skolemization techniques are not function-free). This problem extends to first-order representations of uncertainty.
 Quantified FO-CNF is a generalization of FO-CNF with arbitrary quantification, which makes it strictly more expressive.
 </p>
@@ -255,7 +261,7 @@ Any function-free first-order sentence can be converted in polytime into an <em>
 
 <h3>From Quantified FO-CNF to FO-CNF</h3>
 <p>
-Any Quantified FO-CNF can be <a href="https://lirias.kuleuven.be/bitstream/123456789/444264/1/vdb-kr14.pdf">converted</a> in polytime into a <em>model-count preserving</em> FO-CNF, assuming we use negative weights.
+Any Quantified FO-CNF can be converted <a href="#References">[1]</a> in polytime into a <em>model-count preserving</em> FO-CNF, assuming we use negative weights.
 For the Quantified FO-CNF above, this yields the following FO-CNF.
 <pre>
 p <strong>fo-cnf 3 2</strong>
@@ -276,13 +282,13 @@ To illustrate how FO-CNF can serve as a reduction target for more expressive lan
 
 <h3>Markov Logic Networks</h3>
 
-<a href="http://homes.cs.washington.edu/~pedrod/papers/aaai06c.pdf">Markov Logic Networks</a> (MLNs) are a statistical relational representation language. 
-Our goal here is to reduce MLNs to FO-CNFs whose <a href="https://lirias.kuleuven.be/bitstream/123456789/308265/1/vdb-ijcai11.pdf">weighted first-order model count</a>  (WFOMC) is equal to the partition function of the MLN.
+Markov Logic Networks (MLNs) <a href="#References">[2]</a> are a statistical relational representation language. 
+Our goal here is to reduce MLNs to FO-CNFs whose weighted first-order model count (WFOMC) <a href="#References">[3]</a> is equal to the partition function of the MLN.
 The WFOMC is defined as the sum of the weights of all models of the FO-CNF. 
 
 <h4>Quantifier-Free MLNs</h4>
 
-Quantifier-Free MLNs can easily be <a href="https://lirias.kuleuven.be/bitstream/123456789/308265/1/vdb-ijcai11.pdf">encoded into FO-CNF</a>. Consider the following MLN.
+Quantifier-Free MLNs can easily be encoded into FO-CNF <a href="#References">[1]</a>. Consider the following MLN.
 <pre class="external">people={p0,p1,p2,p3,p4,p5,p6,p7,p8,p9}
 Smokes(people)
 Friends(people,people)
@@ -351,7 +357,7 @@ w R3 3.32 1</pre>
 
 <h3>Probabilistic Logic Programs</h3>
 
-<a href="https://lirias.kuleuven.be/bitstream/123456789/392821/3/plp2cnf.pdf">ProbLog</a> is a probabilistic programming language. Under certain conditions (tightness), ProbLog programs can be <a href="https://lirias.kuleuven.be/bitstream/123456789/444264/1/vdb-kr14.pdf">encoded into Quantified FO-CNFs</a>. Consider the following program.
+ProbLog <a href="#References">[4]</a> is a probabilistic programming language. Under certain conditions (tightness), ProbLog programs can be encoded into Quantified FO-CNFs <a href="#References">[1]</a>. Consider the following program.
 <pre class="external">0.4 :: stress(alice).
 0.8 :: stress(bob).
 0.2 :: friends(alice, bob).
@@ -385,7 +391,7 @@ Note that we enforce the <a href="https://en.wikipedia.org/wiki/Closed-world_ass
 <h3>Probabilistic Databases</h3>
 
 <p>
-Tuple-independent <a href="http://dx.doi.org/10.2200/S00362ED1V01Y201105DTM016">probabilistic databases</a> represent uncertain data that can be queried using the standard database techniques. Probabilistic database query evaluation can easily be <a href="https://lirias.kuleuven.be/bitstream/123456789/460202/1/gribkoff-uai14.pdf">encoded as a WFOMC task</a> on an FO-CNF. Consider the following probabilistic database tables.
+Tuple-independent probabilistic databases <a href="#References">[5]</a> represent uncertain data that can be queried using the standard database techniques. Probabilistic database query evaluation can easily be encoded <a href="#References">[6]</a> as a WFOMC task on an FO-CNF. Consider the following probabilistic database tables.
 <div>
 <table class="left external">
 <caption><strong>Stress</strong></caption>
@@ -505,10 +511,47 @@ The probability of the database query is one minus the WFOMC of the FO-CNF. More
 &lt;EOL&gt;             ::= {The end-of-line specifier}
 </pre>
 
+<h2>References</h2>
 
-<h2>Acknowledgement</h2>
+<dl class="dl-horizontal">
 
-This document is a collaborative effort based on the input of Arthur Choi, Adnan Darwiche, Wannes Meert, Umut Oztok, and Guy Van den Broeck
+    <dt>[1]</dt>
+    <dd>
+    Guy Van den Broeck, Wannes Meert, Adnan Darwiche. <a href="https://lirias.kuleuven.be/bitstream/123456789/444264/1/vdb-kr14.pdf">Skolemization for weighted first-order model counting</a>, In Proceedings of the 14th International Conference on Principles of Knowledge Representation and Reasoning (KR), 2014.
+    </dd>
+
+    <dt>[2]</dt>
+    <dd>
+    Pedro Domingos, Stanley Kok, Hoifung Poon, Matthew Richardson, Parag Singla. <a href="http://homes.cs.washington.edu/~pedrod/papers/aaai06c.pdf">Unifying Logical and Statistical AI</a>, In Proceedings of AAAI, 2006.
+    </dd>
+
+    <dt>[3]</dt>
+    <dd>
+    Guy Van den Broeck, Nima Taghipour, Wannes Meert, Jesse Davis, Luc De Raedt. <a href="https://lirias.kuleuven.be/bitstream/123456789/308265/1/vdb-ijcai11.pdf">Lifted probabilistic inference by first-order knowledge compilation</a>, In Proceedings of the Twenty-Second International Joint Conference on Artificial Intelligence (IJCAI), 2011.
+    </dd>
+
+    <dt>[4]</dt>
+    <dd>
+    Daan Fierens, Guy Van den Broeck, Joris Renkens, Dimitar Shterionov, Bernd Gutmann, Ingo Thon, Gerda Janssens, Luc De Raedt. <a href="https://lirias.kuleuven.be/bitstream/123456789/392821/3/plp2cnf.pdf">Inference and Learning in Probabilistic Logic Programs using Weighted Boolean Formulas</a>, In Theory and Practice of Logic Programming, volume 15, 2015.
+    </dd>
+
+    <dt>[5]</dt>
+    <dd>
+    Dan Suciu, Dan Olteanu, Christopher R&eacute;, Christoph Koch. <a href="http://dx.doi.org/10.2200/S00362ED1V01Y201105DTM016">Probabilistic Databases</a>, In Synthesis Lectures on Data Management, 2011.
+    </dd>
+
+    <dt>[6]</dt>
+    <dd>
+    Eric Gribkoff, Guy Van den Broeck, Dan Suciu. <a href="https://lirias.kuleuven.be/bitstream/123456789/460202/1/gribkoff-uai14.pdf"> Understanding the complexity of lifted inference and asymmetric weighted model counting</a>, In Proceedings of the 30th Conference on Uncertainty in Artificial Intelligence (UAI), 2014.
+    </dd>
+
+</dl>
+
+<h2>Acknowledgements</h2>
+
+<p>
+This document is a collaborative effort based on the input of Arthur Choi, Adnan Darwiche, Wannes Meert, Umut Oztok, and Guy Van den Broeck. For questions or comments, please contact Guy Van den Broeck <a href="mailto:guyvdb@cs.ucla.edu">&lt;guyvdb@cs.ucla.edu&gt;</a>.
+</p>
 
 </div>
 
