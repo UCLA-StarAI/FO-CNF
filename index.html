@@ -55,7 +55,7 @@
 
 <h1>A First-Order CNF Format (FO-CNF)</h1>
 
-This document describes a file format called FO-CNF for representing <em>function-free first-order typed</em> conjunctive normal form theories.
+This document describes a file format called FO-CNF for representing <em>function-free first-order</em> conjunctive normal form theories.
 
 <div id="toc">
 <h2>Contents</h2>
@@ -253,7 +253,7 @@ Any function-free first-order sentence can be converted in polytime into an <em>
 
 <ol>
 <li>Convert from an arbitrary first-order sentence into <a href="https://en.wikipedia.org/wiki/Prenex_normal_form">prenex normal form</a>.</li>
-<li>Replace each quantifier-free sentence $\phi(\mathbf{x})$ by a new relation symbol $R(\mathbf{x})$. Now every quantified sentence is in Quantified FO-CNF format.</li>
+<li>Replace each quantifier-free sentence $\phi(\mathbf{x})$ inside of the prenex normal form by a new relation symbol $R(\mathbf{x})$. Now every sentence in the theory is in Quantified FO-CNF format.</li>
 <li>Add equivalences $\forall \mathbf{x}, R(\mathbf{x}) \Leftrightarrow \phi(\mathbf{x})$. These equivalences are in <a href="https://en.wikipedia.org/wiki/Skolem_normal_form">Skolem normal form</a>.</li>
 <li>Convert the equivalences into FO-CNF in the <a href="https://en.wikipedia.org/wiki/Conjunctive_normal_form">standard way</a>, by eliminating implications and equivalences, going to <a href="https://en.wikipedia.org/wiki/Negation_normal_form">negation normal form</a>, standardizing variables, dropping quantifiers, and distributing disjunctions over conjunctions.</li>
 </ol>
